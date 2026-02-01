@@ -73,7 +73,7 @@ export const OrderView: React.FC<OrderViewProps> = ({ order, onBack }) => {
         return {
           icon: <CreditCard className="w-4 h-4" />,
           name: 'Manual Bank Transfer',
-          description: selectedBank 
+          description: selectedBank
             ? `${selectedBank.bankName} - ${selectedBank.accountNumber} (${selectedBank.accountHolder})`
             : 'Transfer bank manual',
           bankDetails: selectedBank
@@ -83,7 +83,7 @@ export const OrderView: React.FC<OrderViewProps> = ({ order, onBack }) => {
         return {
           icon: <QrCode className="w-4 h-4" />,
           name: 'QRIS Payment',
-          description: selectedQRIS 
+          description: selectedQRIS
             ? `${selectedQRIS.name} - ${selectedQRIS.merchantName}`
             : 'Pembayaran QRIS digital',
           qrisDetails: selectedQRIS
@@ -165,16 +165,21 @@ export const OrderView: React.FC<OrderViewProps> = ({ order, onBack }) => {
               </div>
             </div>
             <div className="text-right">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">E-INVOICE</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                {order.orderType === 'quotation' ? 'OFFER INVOICE' : 'E-INVOICE'}
+              </h2>
               <div className="text-sm text-gray-600">
                 <p><strong>No. Pesanan:</strong> {order.orderNumber}</p>
                 <p><strong>Tanggal:</strong> {new Date(order.date).toLocaleDateString('id-ID')}</p>
-                <div className="mt-2">
-                  <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                    {getStatusIcon(order.status)}
-                    <span>{getStatusText(order.status)}</span>
-                  </span>
-                </div>
+                {/* Status badge - Only show for e-invoice */}
+                {order.orderType !== 'quotation' && (
+                  <div className="mt-2">
+                    <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                      {getStatusIcon(order.status)}
+                      <span>{getStatusText(order.status)}</span>
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -187,69 +192,6 @@ export const OrderView: React.FC<OrderViewProps> = ({ order, onBack }) => {
               <p>Telepon: {order.customer.phone}</p>
               {order.customer.email && <p>Email: {order.customer.email}</p>}
               {order.customer.address && <p>Alamat: {order.customer.address}</p>}
-            </div>
-          </div>
-
-          {/* Payment Method Info */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Metode Pembayaran:</h3>
-            <div className="p-4 bg-gray-50 rounded-lg border">
-              <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0 mt-1">
-                  {paymentMethod.icon}
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900 mb-1">{paymentMethod.name}</p>
-                  <p className="text-sm text-gray-600 mb-2">{paymentMethod.description}</p>
-                  
-                  {/* Show detailed bank info if bank transfer */}
-                  {order.paymentMethod === 'bank_transfer' && selectedBank && (
-                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <div className="text-sm">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                          <div>
-                            <span className="font-medium text-blue-900">Bank:</span>
-                            <p className="text-blue-800">{selectedBank.bankName}</p>
-                          </div>
-                          <div>
-                            <span className="font-medium text-blue-900">No. Rekening:</span>
-                            <p className="text-blue-800 font-mono">{selectedBank.accountNumber}</p>
-                          </div>
-                          <div>
-                            <span className="font-medium text-blue-900">Atas Nama:</span>
-                            <p className="text-blue-800">{selectedBank.accountHolder}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Show detailed QRIS info if QRIS payment */}
-                  {order.paymentMethod === 'qris' && selectedQRIS && (
-                    <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                      <div className="flex items-start space-x-3">
-                        <img 
-                          src={dynamicQR || selectedQRIS.qrisImage}
-                          alt={selectedQRIS.name}
-                          className="w-24 h-24 object-contain mx-auto rounded border border-purple-200"
-                        />
-                        <div className="text-sm flex-1">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                            <div>
-                              <span className="font-medium text-purple-900">Nama QRIS:</span>
-                              <p className="text-purple-800">{selectedQRIS.name}</p>
-                            </div>
-                            <div>
-                              <span className="font-medium text-purple-900">Merchant:</span>
-                              <p className="text-purple-800">{selectedQRIS.merchantName}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
 
@@ -304,7 +246,7 @@ export const OrderView: React.FC<OrderViewProps> = ({ order, onBack }) => {
                   {formatRupiah(order.total)}
                 </span>
               </div>
-              
+
               {/* Payment Information */}
               {order.paidAmount > 0 && (
                 <>
@@ -327,42 +269,39 @@ export const OrderView: React.FC<OrderViewProps> = ({ order, onBack }) => {
             </div>
           </div>
 
-          {/* Status Timeline */}
-          <div className="mb-8">
-            <h4 className="font-semibold text-gray-900 mb-4">Status Pesanan</h4>
-            <div className="flex items-center space-x-4">
-              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${
-                order.status === 'menunggu_pembayaran' ? 'bg-yellow-100 text-yellow-800' : 
-                'bg-gray-100 text-gray-600'
-              }`}>
-                <Clock className="w-4 h-4" />
-                <span className="text-sm font-medium">Menunggu Pembayaran</span>
-              </div>
-              <div className={`w-8 h-0.5 ${
-                ['telah_dibayar', 'done'].includes(order.status) ? 'bg-blue-500' : 'bg-gray-300'
-              }`}></div>
-              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${
-                order.status === 'telah_dibayar' ? 'bg-blue-100 text-blue-800' : 
-                order.status === 'done' ? 'bg-gray-100 text-gray-600' :
-                'bg-gray-100 text-gray-400'
-              }`}>
-                <CheckCircle className="w-4 h-4" />
-                <span className="text-sm font-medium">Telah Dibayar</span>
-              </div>
-              <div className={`w-8 h-0.5 ${
-                order.status === 'done' ? 'bg-green-500' : 'bg-gray-300'
-              }`}></div>
-              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${
-                order.status === 'done' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-400'
-              }`}>
-                <Package className="w-4 h-4" />
-                <span className="text-sm font-medium">Selesai</span>
+          {/* Status Timeline - Only show for e-invoice, hidden for quotation */}
+          {order.orderType !== 'quotation' && (
+            <div className="mb-8">
+              <h4 className="font-semibold text-gray-900 mb-4">Status Pesanan</h4>
+              <div className="flex items-center space-x-4">
+                <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${order.status === 'menunggu_pembayaran' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-gray-100 text-gray-600'
+                  }`}>
+                  <Clock className="w-4 h-4" />
+                  <span className="text-sm font-medium">Menunggu Pembayaran</span>
+                </div>
+                <div className={`w-8 h-0.5 ${['telah_dibayar', 'done'].includes(order.status) ? 'bg-blue-500' : 'bg-gray-300'
+                  }`}></div>
+                <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${order.status === 'telah_dibayar' ? 'bg-blue-100 text-blue-800' :
+                  order.status === 'done' ? 'bg-gray-100 text-gray-600' :
+                    'bg-gray-100 text-gray-400'
+                  }`}>
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-sm font-medium">Telah Dibayar</span>
+                </div>
+                <div className={`w-8 h-0.5 ${order.status === 'done' ? 'bg-green-500' : 'bg-gray-300'
+                  }`}></div>
+                <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${order.status === 'done' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-400'
+                  }`}>
+                  <Package className="w-4 h-4" />
+                  <span className="text-sm font-medium">Selesai</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Payment Details */}
-          {order.paidAmount > 0 && (
+          {/* Payment Details - Only show for e-invoice */}
+          {order.orderType !== 'quotation' && order.paidAmount > 0 && (
             <div className="mb-8">
               <h4 className="font-semibold text-gray-900 mb-3">Detail Pembayaran</h4>
               <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
@@ -383,8 +322,8 @@ export const OrderView: React.FC<OrderViewProps> = ({ order, onBack }) => {
             </div>
           )}
 
-          {/* Bank Transfer Instructions */}
-          {order.paymentMethod === 'bank_transfer' && order.status === 'menunggu_pembayaran' && selectedBank && (
+          {/* Bank Transfer Instructions - Only show for e-invoice */}
+          {order.orderType !== 'quotation' && order.paymentMethod === 'bank_transfer' && order.status === 'menunggu_pembayaran' && selectedBank && (
             <div className="mb-8">
               <h4 className="font-semibold text-gray-900 mb-3">Instruksi Transfer Bank</h4>
               <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-lg">
@@ -423,8 +362,8 @@ export const OrderView: React.FC<OrderViewProps> = ({ order, onBack }) => {
             </div>
           )}
 
-          {/* QRIS Payment Instructions */}
-          {order.paymentMethod === 'qris' && order.status === 'menunggu_pembayaran' && selectedQRIS && (
+          {/* QRIS Payment Instructions - Only show for e-invoice */}
+          {order.orderType !== 'quotation' && order.paymentMethod === 'qris' && order.status === 'menunggu_pembayaran' && selectedQRIS && (
             <div className="mb-8">
               <h4 className="font-semibold text-gray-900 mb-3">Instruksi Pembayaran QRIS</h4>
               <div className="bg-purple-50 border border-purple-200 p-6 rounded-lg">
@@ -435,7 +374,7 @@ export const OrderView: React.FC<OrderViewProps> = ({ order, onBack }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="flex justify-center">
                     <div className="text-center">
-                      <img 
+                      <img
                         src={dynamicQR || selectedQRIS.qrisImage}
                         alt={selectedQRIS.name}
                         className="w-80 h-80 object-contain mx-auto rounded-lg border-2 border-purple-300 shadow-lg"
@@ -465,7 +404,7 @@ export const OrderView: React.FC<OrderViewProps> = ({ order, onBack }) => {
                     </div>
                     <div className="bg-yellow-100 p-3 rounded border border-yellow-300">
                       <p className="text-xs text-yellow-800">
-                        💡 <strong>Tips:</strong> Pastikan nominal pembayaran sesuai dengan total pesanan. 
+                        💡 <strong>Tips:</strong> Pastikan nominal pembayaran sesuai dengan total pesanan.
                         Jika mengalami kesulitan, hubungi customer service kami.
                       </p>
                     </div>

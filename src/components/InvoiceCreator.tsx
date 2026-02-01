@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Save, FileText, Upload, X } from 'lucide-react';
-import { Invoice, LineItem, Company, Client } from '../types/invoice';
+import { Invoice, LineItem, Company, Client, InvoiceType } from '../types/invoice';
 import { saveInvoice, getSettings } from '../utils/storage';
-import { 
-  calculateLineItemAmount, 
-  calculateSubtotal, 
-  calculateTaxAmount, 
+import {
+  calculateLineItemAmount,
+  calculateSubtotal,
+  calculateTaxAmount,
   calculateTotal,
   formatCurrency,
-  generateInvoiceNumber 
+  generateInvoiceNumber
 } from '../utils/calculations';
 
 interface InvoiceCreatorProps {
@@ -17,19 +17,20 @@ interface InvoiceCreatorProps {
   onCancel: () => void;
 }
 
-export const InvoiceCreator: React.FC<InvoiceCreatorProps> = ({ 
-  editingInvoice, 
-  onSave, 
-  onCancel 
+export const InvoiceCreator: React.FC<InvoiceCreatorProps> = ({
+  editingInvoice,
+  onSave,
+  onCancel
 }) => {
   const settings = getSettings();
-  
+
   const [invoice, setInvoice] = useState<Invoice>(() => {
     if (editingInvoice) return editingInvoice;
-    
+
     return {
       id: crypto.randomUUID(),
       invoiceNumber: generateInvoiceNumber(settings.invoicePrefix),
+      invoiceType: 'e-invoice' as InvoiceType,
       date: new Date().toISOString().split('T')[0],
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       company: settings.company,
@@ -258,9 +259,9 @@ export const InvoiceCreator: React.FC<InvoiceCreatorProps> = ({
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                   {logoPreview ? (
                     <div className="relative">
-                      <img 
-                        src={logoPreview} 
-                        alt="Company Logo" 
+                      <img
+                        src={logoPreview}
+                        alt="Company Logo"
                         className="max-h-32 mx-auto rounded"
                       />
                       <button
@@ -359,6 +360,17 @@ export const InvoiceCreator: React.FC<InvoiceCreatorProps> = ({
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Invoice Details</h2>
                 <div className="space-y-4">
                   <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Dokumen</label>
+                    <select
+                      value={invoice.invoiceType}
+                      onChange={(e) => setInvoice(prev => ({ ...prev, invoiceType: e.target.value as InvoiceType }))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="e-invoice">E-Invoice (Faktur Elektronik)</option>
+                      <option value="quotation">Penawaran (Quotation)</option>
+                    </select>
+                  </div>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Number</label>
                     <input
                       type="text"
@@ -440,7 +452,7 @@ export const InvoiceCreator: React.FC<InvoiceCreatorProps> = ({
                   <span>Add Item</span>
                 </button>
               </div>
-              
+
               <div className="border border-gray-200 rounded-lg overflow-hidden">
                 <div className="bg-gray-50 px-6 py-3 grid grid-cols-12 gap-4 font-medium text-gray-700 text-sm">
                   <div className="col-span-5">Description</div>
@@ -449,7 +461,7 @@ export const InvoiceCreator: React.FC<InvoiceCreatorProps> = ({
                   <div className="col-span-2">Amount</div>
                   <div className="col-span-1"></div>
                 </div>
-                
+
                 {invoice.lineItems.map((item, index) => (
                   <div key={item.id} className="px-6 py-4 border-t border-gray-200 grid grid-cols-12 gap-4 items-center">
                     <div className="col-span-5">

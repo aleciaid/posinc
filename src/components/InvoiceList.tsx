@@ -33,13 +33,13 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onCreateNew, onEdit, o
 
   const filteredInvoices = invoices
     .filter(invoice => {
-      const matchesSearch = 
+      const matchesSearch =
         invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         invoice.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         invoice.company.name.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
-      
+
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
@@ -65,6 +65,17 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onCreateNew, onEdit, o
         return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getInvoiceTypeInfo = (invoiceType: string) => {
+    switch (invoiceType) {
+      case 'e-invoice':
+        return { label: 'E-Invoice', color: 'bg-purple-100 text-purple-800' };
+      case 'quotation':
+        return { label: 'Penawaran', color: 'bg-orange-100 text-orange-800' };
+      default:
+        return { label: 'E-Invoice', color: 'bg-purple-100 text-purple-800' };
     }
   };
 
@@ -169,7 +180,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onCreateNew, onEdit, o
               <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No invoices found</h3>
               <p className="text-gray-600 mb-6">
-                {invoices.length === 0 
+                {invoices.length === 0
                   ? "Get started by creating your first invoice"
                   : "Try adjusting your search or filter criteria"
                 }
@@ -204,6 +215,9 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onCreateNew, onEdit, o
                       Total
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Jenis
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -231,6 +245,11 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({ onCreateNew, onEdit, o
                         <div className="text-sm font-medium text-gray-900">
                           {formatCurrency(invoice.total, invoice.currency)}
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getInvoiceTypeInfo(invoice.invoiceType || 'e-invoice').color}`}>
+                          {getInvoiceTypeInfo(invoice.invoiceType || 'e-invoice').label}
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(invoice.status)}`}>

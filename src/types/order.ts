@@ -1,3 +1,5 @@
+export type OrderType = 'e-invoice' | 'quotation';
+
 export interface OrderItem {
   id: string;
   name: string;
@@ -48,6 +50,7 @@ export interface Category {
 export interface Order {
   id: string;
   orderNumber: string;
+  orderType: OrderType;
   date: string;
   customer: Customer;
   items: OrderItem[];

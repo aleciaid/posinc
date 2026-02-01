@@ -40,13 +40,13 @@ export const OrderList: React.FC<OrderListProps> = ({ onCreateNew, onEdit, onVie
 
   const filteredOrders = orders
     .filter(order => {
-      const matchesSearch = 
+      const matchesSearch =
         order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.customer.phone.includes(searchTerm);
-      
+
       const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-      
+
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
@@ -103,6 +103,17 @@ export const OrderList: React.FC<OrderListProps> = ({ onCreateNew, onEdit, onVie
         return <Package className="w-4 h-4" />;
       default:
         return <Clock className="w-4 h-4" />;
+    }
+  };
+
+  const getOrderTypeInfo = (orderType: string) => {
+    switch (orderType) {
+      case 'e-invoice':
+        return { label: 'E-Invoice', color: 'bg-purple-100 text-purple-800' };
+      case 'quotation':
+        return { label: 'Penawaran', color: 'bg-orange-100 text-orange-800' };
+      default:
+        return { label: 'E-Invoice', color: 'bg-purple-100 text-purple-800' };
     }
   };
 
@@ -256,7 +267,7 @@ export const OrderList: React.FC<OrderListProps> = ({ onCreateNew, onEdit, onVie
               <ShoppingCart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Tidak ada pesanan ditemukan</h3>
               <p className="text-gray-600 mb-6">
-                {orders.length === 0 
+                {orders.length === 0
                   ? "Mulai dengan membuat pesanan pertama Anda"
                   : "Coba sesuaikan kriteria pencarian atau filter"
                 }
@@ -290,23 +301,28 @@ export const OrderList: React.FC<OrderListProps> = ({ onCreateNew, onEdit, onVie
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="mb-3">
                       <div className="text-sm text-gray-900">{order.customer.name}</div>
                       <div className="text-sm text-gray-500">{order.customer.phone}</div>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
-                      <select
-                        value={order.status}
-                        onChange={(e) => handleStatusChange(order.id, e.target.value as Order['status'])}
-                        className={`text-xs font-semibold rounded-full px-3 py-1 border-0 ${getStatusColor(order.status)} focus:ring-2 focus:ring-blue-500`}
-                      >
-                        <option value="menunggu_pembayaran">Menunggu Pembayaran</option>
-                        <option value="telah_dibayar">Telah Dibayar</option>
-                        <option value="done">Selesai</option>
-                      </select>
-                      
+                      <div className="flex items-center space-x-2">
+                        <span className={`text-xs font-semibold rounded-full px-2 py-1 ${getOrderTypeInfo(order.orderType || 'e-invoice').color}`}>
+                          {getOrderTypeInfo(order.orderType || 'e-invoice').label}
+                        </span>
+                        <select
+                          value={order.status}
+                          onChange={(e) => handleStatusChange(order.id, e.target.value as Order['status'])}
+                          className={`text-xs font-semibold rounded-full px-3 py-1 border-0 ${getStatusColor(order.status)} focus:ring-2 focus:ring-blue-500`}
+                        >
+                          <option value="menunggu_pembayaran">Menunggu Pembayaran</option>
+                          <option value="telah_dibayar">Telah Dibayar</option>
+                          <option value="done">Selesai</option>
+                        </select>
+                      </div>
+
                       <div className="flex items-center space-x-1">
                         <button
                           onClick={() => onView(order)}
@@ -353,6 +369,9 @@ export const OrderList: React.FC<OrderListProps> = ({ onCreateNew, onEdit, onVie
                         Total
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Jenis
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -378,6 +397,11 @@ export const OrderList: React.FC<OrderListProps> = ({ onCreateNew, onEdit, onVie
                           <div className="text-sm font-medium text-gray-900">
                             {formatRupiah(order.total)}
                           </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getOrderTypeInfo(order.orderType || 'e-invoice').color}`}>
+                            {getOrderTypeInfo(order.orderType || 'e-invoice').label}
+                          </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center space-x-2">

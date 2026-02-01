@@ -1,3 +1,5 @@
+export type InvoiceType = 'e-invoice' | 'quotation';
+
 export interface LineItem {
   id: string;
   description: string;
@@ -31,6 +33,7 @@ export interface Client {
 export interface Invoice {
   id: string;
   invoiceNumber: string;
+  invoiceType: InvoiceType;
   date: string;
   dueDate: string;
   company: Company;
