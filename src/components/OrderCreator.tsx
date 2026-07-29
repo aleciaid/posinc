@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Save, ShoppingCart, ArrowLeft, DollarSign, CreditCard, Banknote, Tag, AlertCircle, QrCode } from 'lucide-react';
-import { Order, OrderItem, Customer, OrderType } from '../types/order';
+import { Order, OrderItem, Customer } from '../types/order';
 import { saveOrder, getSettings, generateOrderNumber, getActiveBanks, getCategories, getBankById, getActiveQRIS, getQRISById } from '../utils/orderStorage';
 import { formatRupiah } from '../utils/currency';
 
@@ -10,10 +10,10 @@ interface OrderCreatorProps {
   onCancel: () => void;
 }
 
-export const OrderCreator: React.FC<OrderCreatorProps> = ({
-  editingOrder,
-  onSave,
-  onCancel
+export const OrderCreator: React.FC<OrderCreatorProps> = ({ 
+  editingOrder, 
+  onSave, 
+  onCancel 
 }) => {
   const settings = getSettings();
   const [activeBanks, setActiveBanks] = useState(getActiveBanks());
@@ -22,7 +22,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [allBanks, setAllBanks] = useState<any[]>([]);
   const [allQRIS, setAllQRIS] = useState<any[]>([]);
-
+  
   // Load all banks and QRIS (active and inactive) for editing purposes
   useEffect(() => {
     const allBanksList = getSettings().bankDetails || [];
@@ -32,14 +32,13 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
     setActiveBanks(getActiveBanks());
     setActiveQRIS(getActiveQRIS());
   }, []);
-
+  
   const [order, setOrder] = useState<Order>(() => {
     if (editingOrder) {
       // Ensure all data is preserved when editing
       return {
         ...editingOrder,
         // Preserve existing data but ensure required fields exist
-        orderType: editingOrder.orderType || 'e-invoice',
         customer: {
           name: editingOrder.customer?.name || '',
           phone: editingOrder.customer?.phone || '',
@@ -60,11 +59,10 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
         selectedQRISId: editingOrder.selectedQRISId || ''
       };
     }
-
+    
     return {
       id: crypto.randomUUID(),
       orderNumber: generateOrderNumber(settings.orderPrefix),
-      orderType: 'e-invoice' as OrderType,
       date: new Date().toISOString().split('T')[0],
       customer: {
         name: '',
@@ -102,11 +100,11 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
   // Get selected bank - this will work for both active and inactive banks
   const selectedBank = (() => {
     if (!order.selectedBankId) return null;
-
+    
     // First try to find in all banks (including inactive ones)
     const bankFromAll = allBanks.find(bank => bank.id === order.selectedBankId);
     if (bankFromAll) return bankFromAll;
-
+    
     // Fallback to getBankById
     return getBankById(order.selectedBankId);
   })();
@@ -114,11 +112,11 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
   // Get selected QRIS - this will work for both active and inactive QRIS
   const selectedQRIS = (() => {
     if (!order.selectedQRISId) return null;
-
+    
     // First try to find in all QRIS (including inactive ones)
     const qrisFromAll = allQRIS.find(qris => qris.id === order.selectedQRISId);
     if (qrisFromAll) return qrisFromAll;
-
+    
     // Fallback to getQRISById
     return getQRISById(order.selectedQRISId);
   })();
@@ -126,7 +124,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
   // Get available banks for dropdown (prioritize active banks, but include selected bank if inactive)
   const availableBanks = (() => {
     const banks = [...activeBanks];
-
+    
     // If editing and selected bank is inactive, include it in the list
     if (editingOrder && selectedBank && !selectedBank.isActive) {
       const isAlreadyInList = banks.some(bank => bank.id === selectedBank.id);
@@ -134,14 +132,14 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
         banks.push(selectedBank);
       }
     }
-
+    
     return banks;
   })();
 
   // Get available QRIS for dropdown (prioritize active QRIS, but include selected QRIS if inactive)
   const availableQRIS = (() => {
     const qrisList = [...activeQRIS];
-
+    
     // If editing and selected QRIS is inactive, include it in the list
     if (editingOrder && selectedQRIS && !selectedQRIS.isActive) {
       const isAlreadyInList = qrisList.some(qris => qris.id === selectedQRIS.id);
@@ -149,7 +147,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
         qrisList.push(selectedQRIS);
       }
     }
-
+    
     return qrisList;
   })();
 
@@ -182,7 +180,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
       ...prev,
       customer: { ...prev.customer, [field]: value }
     }));
-
+    
     // Clear customer name error when typing
     if (field === 'name' && errors.customerName) {
       setErrors(prev => ({ ...prev, customerName: '' }));
@@ -203,7 +201,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
         return item;
       })
     }));
-
+    
     // Clear items error when making changes
     if (errors.items) {
       setErrors(prev => ({ ...prev, items: '' }));
@@ -229,12 +227,12 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
       // Clear selectedQRISId when switching to cash or bank transfer
       selectedQRISId: method === 'qris' ? prev.selectedQRISId : ''
     }));
-
+    
     // Clear bank selection error when switching away from bank transfer
     if (method !== 'bank_transfer' && errors.selectedBankId) {
       setErrors(prev => ({ ...prev, selectedBankId: '' }));
     }
-
+    
     // Clear QRIS selection error when switching away from QRIS
     if (method !== 'qris' && errors.selectedQRISId) {
       setErrors(prev => ({ ...prev, selectedQRISId: '' }));
@@ -246,7 +244,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
       ...prev,
       selectedBankId: bankId
     }));
-
+    
     // Clear bank selection error when a bank is selected
     if (bankId && errors.selectedBankId) {
       setErrors(prev => ({ ...prev, selectedBankId: '' }));
@@ -258,7 +256,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
       ...prev,
       selectedQRISId: qrisId
     }));
-
+    
     // Clear QRIS selection error when a QRIS is selected
     if (qrisId && errors.selectedQRISId) {
       setErrors(prev => ({ ...prev, selectedQRISId: '' }));
@@ -291,18 +289,18 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
-
+    
     // Validate customer name
     if (!order.customer.name.trim()) {
       newErrors.customerName = 'Nama pelanggan wajib diisi';
     }
-
+    
     // Validate items
     const hasValidItems = order.items.some(item => item.name.trim() && item.quantity > 0 && item.price > 0);
     if (!hasValidItems) {
       newErrors.items = 'Minimal harus ada satu item yang valid';
     }
-
+    
     // Validate bank selection for bank transfer
     if (order.paymentMethod === 'bank_transfer') {
       if (!order.selectedBankId) {
@@ -311,7 +309,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
         newErrors.selectedBankId = 'Bank yang dipilih tidak valid atau tidak tersedia';
       }
     }
-
+    
     // Validate QRIS selection for QRIS payment
     if (order.paymentMethod === 'qris') {
       if (!order.selectedQRISId) {
@@ -320,7 +318,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
         newErrors.selectedQRISId = 'QRIS yang dipilih tidak valid atau tidak tersedia';
       }
     }
-
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -334,7 +332,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
       }
       return;
     }
-
+    
     // Ensure updatedAt is set when saving
     const orderToSave = {
       ...order,
@@ -423,8 +421,9 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
                     type="text"
                     value={order.customer.name}
                     onChange={(e) => handleCustomerChange('name', e.target.value)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base ${errors.customerName ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      }`}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base ${
+                      errors.customerName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
                     placeholder="Masukkan nama pelanggan"
                   />
                   {errors.customerName && (
@@ -488,7 +487,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
                   <span>Tambah Item</span>
                 </button>
               </div>
-
+              
               {errors.items && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-red-600 text-sm flex items-center space-x-1">
@@ -497,7 +496,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
                   </p>
                 </div>
               )}
-
+              
               {/* Mobile Item Cards */}
               <div className="block lg:hidden space-y-4">
                 {order.items.map((item, index) => (
@@ -514,7 +513,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
                         </button>
                       )}
                     </div>
-
+                    
                     <div className="space-y-3">
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Nama Item</label>
@@ -526,7 +525,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
                           className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                         />
                       </div>
-
+                      
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Deskripsi</label>
                         <input
@@ -537,7 +536,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
                           className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                         />
                       </div>
-
+                      
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Kategori</label>
                         <select
@@ -551,7 +550,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
                           ))}
                         </select>
                       </div>
-
+                      
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">Jumlah</label>
@@ -575,7 +574,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
                           />
                         </div>
                       </div>
-
+                      
                       <div className="pt-2 border-t border-gray-200">
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-medium text-gray-700">Total:</span>
@@ -598,7 +597,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
                   <div className="col-span-2">Total</div>
                   <div className="col-span-1"></div>
                 </div>
-
+                
                 {order.items.map((item) => (
                   <div key={item.id} className="px-6 py-4 border-t border-gray-200 grid grid-cols-12 gap-4 items-center">
                     <div className="col-span-2">
@@ -686,233 +685,212 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                     />
                   </div>
-
-                  {/* Document Type Selection - Moved up */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Dokumen</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status Pesanan</label>
                     <select
-                      value={order.orderType}
-                      onChange={(e) => setOrder(prev => ({ ...prev, orderType: e.target.value as OrderType }))}
+                      value={order.status}
+                      onChange={(e) => setOrder(prev => ({ ...prev, status: e.target.value as Order['status'] }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                     >
-                      <option value="e-invoice">E-Invoice (Faktur Elektronik)</option>
-                      <option value="quotation">Penawaran (Quotation)</option>
+                      <option value="menunggu_pembayaran">Menunggu Pembayaran</option>
+                      <option value="telah_dibayar">Telah Dibayar</option>
+                      <option value="done">Selesai</option>
                     </select>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {order.orderType === 'e-invoice' ? 'Faktur resmi untuk transaksi penjualan' : 'Dokumen penawaran harga untuk calon pelanggan'}
-                    </p>
                   </div>
 
-                  {/* Payment Method Selection - Only show for e-invoice */}
-                  {order.orderType !== 'quotation' && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">Metode Pembayaran</label>
-                      <div className="space-y-3">
-                        {/* Cash Payment - Always Available */}
+                  {/* Payment Method Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Metode Pembayaran</label>
+                    <div className="space-y-3">
+                      {/* Cash Payment - Always Available */}
+                      <label className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer touch-target">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="cash"
+                          checked={order.paymentMethod === 'cash'}
+                          onChange={(e) => handlePaymentMethodChange(e.target.value as 'cash' | 'bank_transfer')}
+                          className="text-blue-600 focus:ring-blue-500"
+                        />
+                        <div className="flex items-center space-x-2">
+                          <Banknote className="w-5 h-5 text-green-600" />
+                          <div>
+                            <p className="font-medium text-gray-900">Cash Payment</p>
+                            <p className="text-sm text-gray-600">Pembayaran tunai langsung</p>
+                          </div>
+                        </div>
+                      </label>
+
+                      {/* Manual Bank Transfer - Conditional */}
+                      {activeBanks.length > 0 && (
                         <label className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer touch-target">
                           <input
                             type="radio"
                             name="paymentMethod"
-                            value="cash"
-                            checked={order.paymentMethod === 'cash'}
-                            onChange={(e) => handlePaymentMethodChange(e.target.value as 'cash' | 'bank_transfer')}
+                            value="bank_transfer"
+                            checked={order.paymentMethod === 'bank_transfer'}
+                            onChange={(e) => handlePaymentMethodChange(e.target.value as 'cash' | 'bank_transfer' | 'qris')}
                             className="text-blue-600 focus:ring-blue-500"
                           />
                           <div className="flex items-center space-x-2">
-                            <Banknote className="w-5 h-5 text-green-600" />
+                            <CreditCard className="w-5 h-5 text-blue-600" />
                             <div>
-                              <p className="font-medium text-gray-900">Cash Payment</p>
-                              <p className="text-sm text-gray-600">Pembayaran tunai langsung</p>
+                              <p className="font-medium text-gray-900">Manual Bank Transfer</p>
+                              <p className="text-sm text-gray-600">
+                                Transfer ke bank yang dipilih ({activeBanks.length} bank tersedia)
+                              </p>
                             </div>
                           </div>
                         </label>
+                      )}
 
-                        {/* Manual Bank Transfer - Conditional */}
-                        {activeBanks.length > 0 && (
-                          <label className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer touch-target">
-                            <input
-                              type="radio"
-                              name="paymentMethod"
-                              value="bank_transfer"
-                              checked={order.paymentMethod === 'bank_transfer'}
-                              onChange={(e) => handlePaymentMethodChange(e.target.value as 'cash' | 'bank_transfer' | 'qris')}
-                              className="text-blue-600 focus:ring-blue-500"
-                            />
-                            <div className="flex items-center space-x-2">
-                              <CreditCard className="w-5 h-5 text-blue-600" />
-                              <div>
-                                <p className="font-medium text-gray-900">Manual Bank Transfer</p>
-                                <p className="text-sm text-gray-600">
-                                  Transfer ke bank yang dipilih ({activeBanks.length} bank tersedia)
-                                </p>
-                              </div>
+                      {/* QRIS Payment - Conditional */}
+                      {activeQRIS.length > 0 && (
+                        <label className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer touch-target">
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value="qris"
+                            checked={order.paymentMethod === 'qris'}
+                            onChange={(e) => handlePaymentMethodChange(e.target.value as 'cash' | 'bank_transfer' | 'qris')}
+                            className="text-blue-600 focus:ring-blue-500"
+                          />
+                          <div className="flex items-center space-x-2">
+                            <QrCode className="w-5 h-5 text-purple-600" />
+                            <div>
+                              <p className="font-medium text-gray-900">QRIS Payment</p>
+                              <p className="text-sm text-gray-600">
+                                Scan QRIS untuk pembayaran digital ({activeQRIS.length} QRIS tersedia)
+                              </p>
                             </div>
-                          </label>
-                        )}
+                          </div>
+                        </label>
+                      )}
 
-                        {/* QRIS Payment - Conditional */}
-                        {activeQRIS.length > 0 && (
-                          <label className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer touch-target">
-                            <input
-                              type="radio"
-                              name="paymentMethod"
-                              value="qris"
-                              checked={order.paymentMethod === 'qris'}
-                              onChange={(e) => handlePaymentMethodChange(e.target.value as 'cash' | 'bank_transfer' | 'qris')}
-                              className="text-blue-600 focus:ring-blue-500"
-                            />
-                            <div className="flex items-center space-x-2">
-                              <QrCode className="w-5 h-5 text-purple-600" />
-                              <div>
-                                <p className="font-medium text-gray-900">QRIS Payment</p>
-                                <p className="text-sm text-gray-600">
-                                  Scan QRIS untuk pembayaran digital ({activeQRIS.length} QRIS tersedia)
-                                </p>
-                              </div>
+                      {/* Bank Transfer Not Available Message */}
+                      {activeBanks.length === 0 && activeQRIS.length === 0 && (
+                        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <CreditCard className="w-5 h-5 text-yellow-600" />
+                            <div>
+                              <p className="text-sm font-medium text-yellow-800">Transfer Bank & QRIS tidak tersedia</p>
+                              <p className="text-xs text-yellow-700">
+                                Konfigurasi bank dan QRIS di Pengaturan untuk mengaktifkan opsi ini
+                              </p>
                             </div>
-                          </label>
-                        )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
-                        {/* Bank Transfer Not Available Message */}
-                        {activeBanks.length === 0 && activeQRIS.length === 0 && (
-                          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                            <div className="flex items-center space-x-2">
-                              <CreditCard className="w-5 h-5 text-yellow-600" />
-                              <div>
-                                <p className="text-sm font-medium text-yellow-800">Transfer Bank & QRIS tidak tersedia</p>
-                                <p className="text-xs text-yellow-700">
-                                  Konfigurasi bank dan QRIS di Pengaturan untuk mengaktifkan opsi ini
+                    {/* Bank Selection - Show when bank transfer is selected */}
+                    {order.paymentMethod === 'bank_transfer' && availableBanks.length > 0 && (
+                      <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Pilih Bank <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={order.selectedBankId}
+                          onChange={(e) => handleBankSelection(e.target.value)}
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base ${
+                            errors.selectedBankId ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                        >
+                          <option value="">Pilih Bank</option>
+                          {availableBanks.map(bank => (
+                            <option key={bank.id} value={bank.id}>
+                              {bank.bankName} - {bank.accountNumber} ({bank.accountHolder})
+                              {!bank.isActive ? ' [Tidak Aktif]' : ''}
+                            </option>
+                          ))}
+                        </select>
+                        
+                        {errors.selectedBankId && (
+                          <p className="text-red-600 text-xs mt-1 flex items-center space-x-1">
+                            <AlertCircle className="w-3 h-3" />
+                            <span>{errors.selectedBankId}</span>
+                          </p>
+                        )}
+                        
+                        {/* Show selected bank info */}
+                        {selectedBank && (
+                          <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <CreditCard className="w-4 h-4 text-blue-600" />
+                              <span className="text-sm font-medium text-blue-800">Bank yang Dipilih:</span>
+                            </div>
+                            <div className="text-sm text-blue-800 space-y-1">
+                              <p><strong>Bank:</strong> {selectedBank.bankName}</p>
+                              <p><strong>No. Rekening:</strong> {selectedBank.accountNumber}</p>
+                              <p><strong>Atas Nama:</strong> {selectedBank.accountHolder}</p>
+                              {!selectedBank.isActive && (
+                                <p className="text-red-600 text-xs mt-2">
+                                  ⚠️ Bank ini sudah tidak aktif, namun tetap dapat digunakan untuk pesanan yang sudah ada.
                                 </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* QRIS Selection - Show when QRIS is selected */}
+                    {order.paymentMethod === 'qris' && availableQRIS.length > 0 && (
+                      <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Pilih QRIS <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={order.selectedQRISId}
+                          onChange={(e) => handleQRISSelection(e.target.value)}
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base ${
+                            errors.selectedQRISId ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                        >
+                          <option value="">Pilih QRIS</option>
+                          {availableQRIS.map(qris => (
+                            <option key={qris.id} value={qris.id}>
+                              {qris.name} - {qris.merchantName}
+                              {!qris.isActive ? ' [Tidak Aktif]' : ''}
+                            </option>
+                          ))}
+                        </select>
+                        
+                        {errors.selectedQRISId && (
+                          <p className="text-red-600 text-xs mt-1 flex items-center space-x-1">
+                            <AlertCircle className="w-3 h-3" />
+                            <span>{errors.selectedQRISId}</span>
+                          </p>
+                        )}
+                        
+                        {/* Show selected QRIS info */}
+                        {selectedQRIS && (
+                          <div className="mt-3 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <QrCode className="w-4 h-4 text-purple-600" />
+                              <span className="text-sm font-medium text-purple-800">QRIS yang Dipilih:</span>
+                            </div>
+                            <div className="flex items-start space-x-3">
+                              <img 
+                                src={selectedQRIS.qrisImage} 
+                                alt={selectedQRIS.name}
+                                className="w-16 h-16 object-contain rounded border border-purple-200"
+                              />
+                              <div className="text-sm text-purple-800 space-y-1">
+                                <p><strong>Nama:</strong> {selectedQRIS.name}</p>
+                                <p><strong>Merchant:</strong> {selectedQRIS.merchantName}</p>
+                                {!selectedQRIS.isActive && (
+                                  <p className="text-red-600 text-xs mt-2">
+                                    ⚠️ QRIS ini sudah tidak aktif, namun tetap dapat digunakan untuk pesanan yang sudah ada.
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </div>
                         )}
                       </div>
-
-                      {/* Bank Selection - Show when bank transfer is selected */}
-                      {order.paymentMethod === 'bank_transfer' && availableBanks.length > 0 && (
-                        <div className="mt-4">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Pilih Bank <span className="text-red-500">*</span>
-                          </label>
-                          <select
-                            value={order.selectedBankId}
-                            onChange={(e) => handleBankSelection(e.target.value)}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base ${errors.selectedBankId ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                              }`}
-                          >
-                            <option value="">Pilih Bank</option>
-                            {availableBanks.map(bank => (
-                              <option key={bank.id} value={bank.id}>
-                                {bank.bankName} - {bank.accountNumber} ({bank.accountHolder})
-                                {!bank.isActive ? ' [Tidak Aktif]' : ''}
-                              </option>
-                            ))}
-                          </select>
-
-                          {errors.selectedBankId && (
-                            <p className="text-red-600 text-xs mt-1 flex items-center space-x-1">
-                              <AlertCircle className="w-3 h-3" />
-                              <span>{errors.selectedBankId}</span>
-                            </p>
-                          )}
-
-                          {/* Show selected bank info */}
-                          {selectedBank && (
-                            <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                              <div className="flex items-center space-x-2 mb-2">
-                                <CreditCard className="w-4 h-4 text-blue-600" />
-                                <span className="text-sm font-medium text-blue-800">Bank yang Dipilih:</span>
-                              </div>
-                              <div className="text-sm text-blue-800 space-y-1">
-                                <p><strong>Bank:</strong> {selectedBank.bankName}</p>
-                                <p><strong>No. Rekening:</strong> {selectedBank.accountNumber}</p>
-                                <p><strong>Atas Nama:</strong> {selectedBank.accountHolder}</p>
-                                {!selectedBank.isActive && (
-                                  <p className="text-red-600 text-xs mt-2">
-                                    ⚠️ Bank ini sudah tidak aktif, namun tetap dapat digunakan untuk pesanan yang sudah ada.
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* QRIS Selection - Show when QRIS is selected */}
-                      {order.paymentMethod === 'qris' && availableQRIS.length > 0 && (
-                        <div className="mt-4">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Pilih QRIS <span className="text-red-500">*</span>
-                          </label>
-                          <select
-                            value={order.selectedQRISId}
-                            onChange={(e) => handleQRISSelection(e.target.value)}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base ${errors.selectedQRISId ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                              }`}
-                          >
-                            <option value="">Pilih QRIS</option>
-                            {availableQRIS.map(qris => (
-                              <option key={qris.id} value={qris.id}>
-                                {qris.name} - {qris.merchantName}
-                                {!qris.isActive ? ' [Tidak Aktif]' : ''}
-                              </option>
-                            ))}
-                          </select>
-
-                          {errors.selectedQRISId && (
-                            <p className="text-red-600 text-xs mt-1 flex items-center space-x-1">
-                              <AlertCircle className="w-3 h-3" />
-                              <span>{errors.selectedQRISId}</span>
-                            </p>
-                          )}
-
-                          {/* Show selected QRIS info */}
-                          {selectedQRIS && (
-                            <div className="mt-3 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                              <div className="flex items-center space-x-2 mb-2">
-                                <QrCode className="w-4 h-4 text-purple-600" />
-                                <span className="text-sm font-medium text-purple-800">QRIS yang Dipilih:</span>
-                              </div>
-                              <div className="flex items-start space-x-3">
-                                <img
-                                  src={selectedQRIS.qrisImage}
-                                  alt={selectedQRIS.name}
-                                  className="w-16 h-16 object-contain rounded border border-purple-200"
-                                />
-                                <div className="text-sm text-purple-800 space-y-1">
-                                  <p><strong>Nama:</strong> {selectedQRIS.name}</p>
-                                  <p><strong>Merchant:</strong> {selectedQRIS.merchantName}</p>
-                                  {!selectedQRIS.isActive && (
-                                    <p className="text-red-600 text-xs mt-2">
-                                      ⚠️ QRIS ini sudah tidak aktif, namun tetap dapat digunakan untuk pesanan yang sudah ada.
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Status Pesanan - Only show for e-invoice, hidden for quotation */}
-                  {order.orderType !== 'quotation' && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Status Pesanan</label>
-                      <select
-                        value={order.status}
-                        onChange={(e) => setOrder(prev => ({ ...prev, status: e.target.value as Order['status'] }))}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-                      >
-                        <option value="menunggu_pembayaran">Menunggu Pembayaran</option>
-                        <option value="telah_dibayar">Telah Dibayar</option>
-                        <option value="done">Selesai</option>
-                      </select>
-                    </div>
-                  )}
-
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -952,7 +930,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
                       </div>
                     </div>
                   </div>
-
+                  
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Jumlah Dibayar</label>
@@ -967,7 +945,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
                         Format: {formatRupiah(order.paidAmount)}
                       </p>
                     </div>
-
+                    
                     {remainingAmount > 0 && (
                       <div className="bg-red-50 border border-red-200 p-3 rounded-lg">
                         <p className="text-sm text-red-800">
@@ -976,7 +954,7 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
                         </p>
                       </div>
                     )}
-
+                    
                     {order.paidAmount >= order.total && order.total > 0 && (
                       <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
                         <p className="text-sm text-green-800 font-medium">
@@ -1003,6 +981,6 @@ export const OrderCreator: React.FC<OrderCreatorProps> = ({
           </div>
         </div>
       </div>
-    </div >
+    </div>
   );
 };
